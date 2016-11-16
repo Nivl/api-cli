@@ -18,13 +18,13 @@ import (
 	"github.com/urfave/cli"
 )
 
+// Regex to parse db struct tag like `db:"field_name"`
 var dbFieldRegex, _ = regexp.Compile("`db:\"([a-zA-Z0-9_-]+),?.*\"`")
 
-// ModelField represents a struct field from the model
+// ModelField represents a field from the struct we are parsing
 type ModelField struct {
-	Name     string
-	DbName   string
-	Nullable bool
+	Name   string
+	DbName string
 }
 
 // Model represent a model to generate
@@ -38,7 +38,7 @@ type Model struct {
 	Fields      []*ModelField
 }
 
-// ModelTemplateVars contains all the variable needed to render a model
+// ModelTemplateVars contains all the variable needed to render the new file
 type ModelTemplateVars struct {
 	ModelName      string
 	ModelNameLC    string
@@ -51,6 +51,7 @@ type ModelTemplateVars struct {
 	UpdateStmtArgs string
 }
 
+// setDefault control what has been set in the model, and set default values where needed
 func (m *Model) setDefault() error {
 	if m.Name == "" {
 		return errors.New("model name missing")
@@ -108,7 +109,7 @@ func (m *Model) Parse() error {
 	return m.generate()
 }
 
-// generate generates the new model file
+// generate generates the new file
 func (m *Model) generate() error {
 	vars := &ModelTemplateVars{
 		ModelName:   m.Name,
@@ -153,6 +154,7 @@ func (m *Model) generate() error {
 		i+1,
 	)
 
+	// Get the template and parse it with the variables we have
 	t, err := template.New("model").Parse(modelTpl)
 	if err != nil {
 		fmt.Println(err)
@@ -165,6 +167,7 @@ func (m *Model) generate() error {
 	}
 	output := strings.TrimSpace(buf.String())
 
+	// Write the new file to the disk
 	newFile, err := os.Create(m.generatedFileName())
 	if err != nil {
 		return err
@@ -201,12 +204,6 @@ func (m *Model) parseTarget(f *ast.File) error {
 		// We do not handle structs with no name, and un-exported fields
 		// Also, I'm not sure in what case we can have more than one name?
 		if len(field.Names) > 0 && field.Names[0].IsExported() {
-			// // Lets be sure the field has a type
-			// if field.Type == nil {
-			// 	continue
-			// }
-			// _, isPointer := field.Type.(*ast.StarExpr)
-
 			// Lets be sure the field has a Tag
 			if field.Tag == nil {
 				continue
@@ -220,7 +217,6 @@ func (m *Model) parseTarget(f *ast.File) error {
 			newField := &ModelField{
 				Name:   field.Names[0].Name,
 				DbName: dbName[1],
-				// Nullable: isPointer,
 			}
 
 			m.Fields = append(m.Fields, newField)
