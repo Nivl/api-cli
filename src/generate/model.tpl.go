@@ -24,7 +24,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doCreate() error {
 	{{.ModelVar}}.UpdatedAt = db.Now()
 
 	stmt := "{{.CreateStmt}}"
-	_, err := app.GetContext().SQL.Exec(stmt, {{.CreateStmtArgs}})
+	_, err := app.GetContext().SQL.NamedExec(stmt, {{.ModelVar}})
   return err
 }
 
@@ -69,8 +69,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doDelete() error {
 		return apierror.NewServerError("cannot delete a non-persisted {{.ModelNameLC}}")
 	}
 
-	now := db.Now()
-	{{.ModelVar}}.DeletedAt = &now
+	{{.ModelVar}}.DeletedAt = db.Now()
 
 	stmt := "UPDATE {{.TableName}} SET deleted_at = $2 WHERE id=$1"
 	_, err := sql().Exec(stmt, {{.ModelVar}}.ID, *{{.ModelVar}}.DeletedAt)

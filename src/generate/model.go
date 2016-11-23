@@ -122,13 +122,10 @@ func (m *Model) generate() error {
 	// Create Statement
 	createFields := make([]string, len(m.Fields))
 	createValues := make([]string, len(m.Fields))
-	createArgs := make([]string, len(m.Fields))
 	for i, field := range m.Fields {
 		createFields[i] = field.DbName
-		createValues[i] = fmt.Sprintf("$%d", i+1)
-		createArgs[i] = fmt.Sprintf("%s.%s", vars.ModelVar, field.Name)
+		createValues[i] = ":" + field.DbName
 	}
-	vars.CreateStmtArgs = strings.Join(createArgs, ", ")
 	vars.CreateStmt = fmt.Sprintf(
 		"INSERT INTO %s (%s) VALUES (%s)",
 		vars.TableName,
