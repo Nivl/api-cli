@@ -23,6 +23,10 @@ func SubCommands() []cli.Command {
 					Usage:  "Name of the go package to parse",
 					EnvVar: "GOPACKAGE",
 				},
+				cli.StringFlag{
+					Name:  "exclude, e",
+					Usage: "Methods to exclude from the generated file",
+				},
 			},
 			Action: func(c *cli.Context) error {
 				GenModel(c)

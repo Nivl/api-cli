@@ -13,6 +13,37 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+{{ if .Generate "Save" -}}
+// Save creates or updates the {{.ModelNameLC}} depending on the value of the id
+func ({{.ModelVar}} *{{.ModelName}}) Save() error {
+	if {{.ModelVar}} == nil {
+		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
+	}
+
+	if {{.ModelVar}}.ID == "" {
+		return u.Create()
+	}
+
+	return {{.ModelVar}}.Update()
+}
+{{- end }}
+
+{{ if .Generate "Create" -}}
+// Create persists a user in the database
+func ({{.ModelVar}} *{{.ModelName}}) Create() error {
+	if {{.ModelVar}} == nil {
+		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
+	}
+
+	if {{.ModelVar}}.ID != "" {
+		return apierror.NewServerError("cannot persist a {{.ModelNameLC}} that already has a ID")
+	}
+
+	return {{.ModelVar}}.doCreate()
+}
+{{- end }}
+
+{{ if .Generate "doCreate" -}}
 // doCreate persists an object in the database
 func ({{.ModelVar}} *{{.ModelName}}) doCreate() error {
 	if {{.ModelVar}} == nil {
@@ -27,7 +58,25 @@ func ({{.ModelVar}} *{{.ModelName}}) doCreate() error {
 	_, err := app.GetContext().SQL.NamedExec(stmt, {{.ModelVar}})
   return err
 }
+{{- end }}
 
+{{ if .Generate "Update" -}}
+// Update updates most of the fields of a persisted {{.ModelNameLC}}.
+// Excluded fields are id, created_at, deleted_at
+func ({{.ModelVar}} *{{.ModelName}}) Update() error {
+	if {{.ModelVar}} == nil {
+		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
+	}
+
+	if {{.ModelVar}}.ID == "" {
+		return apierror.NewServerError("cannot update a non-persisted {{.ModelNameLC}}")
+	}
+
+	return {{.ModelVar}}.doUpdate()
+}
+{{- end }}
+
+{{ if .Generate "doUpdate" -}}
 // doUpdate updates an object in the database
 func ({{.ModelVar}} *{{.ModelName}}) doUpdate() error {
 	if {{.ModelVar}} == nil {
@@ -44,7 +93,9 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate() error {
 	_, err := app.GetContext().SQL.Exec(stmt, {{.UpdateStmtArgs}})
 	return err
 }
+{{- end }}
 
+{{ if .Generate "FullyDelete" -}}
 // FullyDelete removes an object from the database
 func ({{.ModelVar}} *{{.ModelName}}) FullyDelete() error {
 	if {{.ModelVar}} == nil {
@@ -58,7 +109,16 @@ func ({{.ModelVar}} *{{.ModelName}}) FullyDelete() error {
 	_, err := sql().Exec("DELETE FROM {{.TableName}} WHERE id=$1", {{.ModelVar}}.ID)
 	return err
 }
+{{- end }}
 
+{{ if .Generate "Delete" -}}
+// Delete soft delete a user.
+func (u *User) Delete() error {
+	return u.doDelete()
+}
+{{- end }}
+
+{{ if .Generate "doDelete" -}}
 // doDelete performs a soft delete operation on an object
 func ({{.ModelVar}} *{{.ModelName}}) doDelete() error {
 	if {{.ModelVar}} == nil {
@@ -75,8 +135,11 @@ func ({{.ModelVar}} *{{.ModelName}}) doDelete() error {
 	_, err := sql().Exec(stmt, {{.ModelVar}}.ID, *{{.ModelVar}}.DeletedAt)
 	return err
 }
+{{- end }}
 
+{{ if .Generate "IsZero" -}}
 // IsZero checks if the object is either nil or don't have an ID
 func ({{.ModelVar}} *{{.ModelName}}) IsZero() bool {
 	return {{.ModelVar}} == nil || {{.ModelVar}}.ID == ""
-}`
+}
+{{- end }}`

@@ -36,6 +36,7 @@ type Model struct {
 	Path        string
 	FullPath    string
 	Fields      []*ModelField
+	Excluded    []string
 }
 
 // ModelTemplateVars contains all the variable needed to render the new file
@@ -49,6 +50,17 @@ type ModelTemplateVars struct {
 	CreateStmtArgs string
 	UpdateStmt     string
 	UpdateStmtArgs string
+	Excluded       []string
+}
+
+// Generate returns true if the element has not been excluded
+func (mtv *ModelTemplateVars) Generate(wanted string) bool {
+	for _, name := range mtv.Excluded {
+		if name == wanted {
+			return false
+		}
+	}
+	return true
 }
 
 // setDefault control what has been set in the model, and set default values where needed
@@ -117,6 +129,7 @@ func (m *Model) generate() error {
 		TableName:   m.Table,
 		ModelVar:    string(strings.ToLower(m.Name)[0]),
 		PackageName: m.PackageName,
+		Excluded:    m.Excluded,
 	}
 
 	// Create Statement
@@ -225,11 +238,18 @@ func (m *Model) parseTarget(f *ast.File) error {
 
 // GenModel is used to generate a new model
 func GenModel(c *cli.Context) error {
+	// Parse the excluded data
+	excluded := strings.Split(c.String("exclude"), ",")
+	for i, name := range excluded {
+		excluded[i] = strings.TrimSpace(name)
+	}
+
 	model := &Model{
 		Name:        c.Args().First(),
 		Table:       c.String("table"),
 		FileName:    c.String("file"),
 		PackageName: c.String("package"),
+		Excluded:    excluded,
 	}
 
 	return model.Parse()
