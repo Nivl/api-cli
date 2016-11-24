@@ -7,12 +7,12 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"html/template"
 	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
 	"strings"
+	"text/template"
 
 	"github.com/serenize/snaker"
 	"github.com/urfave/cli"
@@ -50,6 +50,7 @@ type ModelTemplateVars struct {
 	CreateStmtArgs string
 	UpdateStmt     string
 	UpdateStmtArgs string
+	FieldsAsArray  string
 	Excluded       []string
 }
 
@@ -131,6 +132,13 @@ func (m *Model) generate() error {
 		PackageName: m.PackageName,
 		Excluded:    m.Excluded,
 	}
+
+	// Array of Fields
+	fieldsAsArray := make([]string, len(m.Fields))
+	for i, field := range m.Fields {
+		fieldsAsArray[i] = fmt.Sprintf(`"%s"`, field.DbName)
+	}
+	vars.FieldsAsArray = strings.Join(fieldsAsArray, ", ")
 
 	// Create Statement
 	createFields := make([]string, len(m.Fields))

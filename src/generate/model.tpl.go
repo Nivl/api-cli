@@ -6,12 +6,34 @@ var modelTpl = `package {{.PackageName}}
 
 import (
 	"errors"
+	{{ if .Generate "JoinSQL" -}}
+	"fmt"
+	{{- end }}
 
 	"github.com/melvin-laplanche/ml-api/src/apierror"
 	"github.com/melvin-laplanche/ml-api/src/app"
 	"github.com/melvin-laplanche/ml-api/src/db"
 	uuid "github.com/satori/go.uuid"
 )
+
+{{ if .Generate "JoinSQL" -}}
+// JoinSQL returns a string ready to be embed in a JOIN query
+func JoinSQL(prefix string) string {
+	fields := []string{ {{.FieldsAsArray}} }
+	output := ""
+
+	for i, field := range fields {
+		if i != 0 {
+			output += ", "
+		}
+
+		fullName := fmt.Sprintf("%s.%s", prefix, field)
+		output += fmt.Sprintf("%s \"%s\"", fullName, fullName)
+	}
+
+	return output
+}
+{{- end }}
 
 {{ if .Generate "Save" -}}
 // Save creates or updates the {{.ModelNameLC}} depending on the value of the id
@@ -112,9 +134,9 @@ func ({{.ModelVar}} *{{.ModelName}}) FullyDelete() error {
 {{- end }}
 
 {{ if .Generate "Delete" -}}
-// Delete soft delete a user.
-func (u *User) Delete() error {
-	return u.doDelete()
+// Delete soft delete an object.
+func ({{.ModelVar}} *{{.ModelName}}) Delete() error {
+	return {{.ModelVar}}.doDelete()
 }
 {{- end }}
 
