@@ -43,7 +43,7 @@ func ({{.ModelVar}} *{{.ModelName}}) Save() error {
 	}
 
 	if {{.ModelVar}}.ID == "" {
-		return u.Create()
+		return {{.ModelVar}}.Create()
 	}
 
 	return {{.ModelVar}}.Update()
