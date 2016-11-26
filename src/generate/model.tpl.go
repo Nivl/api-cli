@@ -154,7 +154,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doDelete() error {
 	{{.ModelVar}}.DeletedAt = db.Now()
 
 	stmt := "UPDATE {{.TableName}} SET deleted_at = $2 WHERE id=$1"
-	_, err := sql().Exec(stmt, {{.ModelVar}}.ID, *{{.ModelVar}}.DeletedAt)
+	_, err := sql().Exec(stmt, {{.ModelVar}}.ID, {{.ModelVar}}.DeletedAt)
 	return err
 }
 {{- end }}
