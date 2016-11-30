@@ -156,20 +156,14 @@ func (m *Model) generate() error {
 
 	// Update Statement
 	updateFields := make([]string, len(m.Fields))
-	updateArgs := make([]string, len(m.Fields)+1)
-	var i int
-	for _, field := range m.Fields {
-		updateFields[i] = fmt.Sprintf("%s = $%d", field.DbName, i+1)
-		updateArgs[i] = fmt.Sprintf("%s.%s", vars.ModelVar, field.Name)
-		i++
+
+	for i, field := range m.Fields {
+		updateFields[i] = fmt.Sprintf("%s=:%s", field.DbName, field.DbName)
 	}
-	updateArgs[i] = fmt.Sprintf("%s.ID", vars.ModelVar)
-	vars.UpdateStmtArgs = strings.Join(updateArgs, ", ")
 	vars.UpdateStmt = fmt.Sprintf(
-		"UPDATE %s SET %s WHERE id=$%d",
+		"UPDATE %s SET %s WHERE id=:id",
 		vars.TableName,
 		strings.Join(updateFields, ", "),
-		i+1,
 	)
 
 	// Get the template and parse it with the variables we have
