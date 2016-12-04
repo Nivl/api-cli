@@ -10,9 +10,8 @@ import (
 	"fmt"
 	{{- end }}
 
-	"github.com/jmoiron/sqlx"
+	"github.com/Nivl/sqalx"
 	"github.com/melvin-laplanche/ml-api/src/apierror"
-	"github.com/melvin-laplanche/ml-api/src/app"
 	"github.com/melvin-laplanche/ml-api/src/db"
 	uuid "github.com/satori/go.uuid"
 )
@@ -39,14 +38,14 @@ func JoinSQL(prefix string) string {
 {{ if .Generate "Save" -}}
 // Save creates or updates the {{.ModelNameLC}} depending on the value of the id
 func ({{.ModelVar}} *{{.ModelName}}) Save() error {
-	return {{.ModelVar}}.SaveTx(nil)
+	return {{.ModelVar}}.SaveTx(db.Con())
 }
 {{- end }}
 
 {{ if .Generate "SaveTx" -}}
 // SaveTx creates or updates the article depending on the value of the id using
 // a transaction
-func ({{.ModelVar}} *{{.ModelName}}) SaveTx(tx *sqlx.Tx) error {
+func ({{.ModelVar}} *{{.ModelName}}) SaveTx(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
 	}
@@ -62,19 +61,19 @@ func ({{.ModelVar}} *{{.ModelName}}) SaveTx(tx *sqlx.Tx) error {
 {{ if .Generate "Create" -}}
 // Create persists a user in the database
 func ({{.ModelVar}} *{{.ModelName}}) Create() error {
-	return {{.ModelVar}}.CreateTx(nil)
+	return {{.ModelVar}}.CreateTx(db.Con())
 }
 {{- end }}
 
 {{ if .Generate "CreateTx" -}}
 // Create persists a user in the database
-func ({{.ModelVar}} *{{.ModelName}}) CreateTx(tx *sqlx.Tx) error {
+func ({{.ModelVar}} *{{.ModelName}}) CreateTx(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
 	}
 
 	if {{.ModelVar}}.ID != "" {
-		return apierror.NewServerError("cannot persist a {{.ModelNameLC}} that already has a ID")
+		return apierror.NewServerError("cannot persist a {{.ModelNameLC}} that already has an ID")
 	}
 
 	return {{.ModelVar}}.doCreate(tx)
@@ -82,8 +81,8 @@ func ({{.ModelVar}} *{{.ModelName}}) CreateTx(tx *sqlx.Tx) error {
 {{- end }}
 
 {{ if .Generate "doCreate" -}}
-// doCreate persists an object in the database using an optional transaction
-func ({{.ModelVar}} *{{.ModelName}}) doCreate(tx *sqlx.Tx) error {
+// doCreate persists an object in the database using a Node
+func ({{.ModelVar}} *{{.ModelName}}) doCreate(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return errors.New("{{.ModelNameLC}} not instanced")
 	}
@@ -93,12 +92,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doCreate(tx *sqlx.Tx) error {
 	{{.ModelVar}}.UpdatedAt = db.Now()
 
 	stmt := "{{.CreateStmt}}"
-	var err error
-	if tx == nil {
-	  _, err = app.GetContext().SQL.NamedExec(stmt, {{.ModelVar}})
-	} else {
-		_, err = tx.NamedExec(stmt, {{.ModelVar}})
-	}
+	_, err := tx.NamedExec(stmt, {{.ModelVar}})
 
   return err
 }
@@ -108,14 +102,14 @@ func ({{.ModelVar}} *{{.ModelName}}) doCreate(tx *sqlx.Tx) error {
 // Update updates most of the fields of a persisted {{.ModelNameLC}}.
 // Excluded fields are id, created_at, deleted_at, etc.
 func ({{.ModelVar}} *{{.ModelName}}) Update() error {
-	return {{.ModelVar}}.UpdateTx(nil)
+	return {{.ModelVar}}.UpdateTx(db.Con())
 }
 {{- end }}
 
 {{ if .Generate "UpdateTx" -}}
 // Update updates most of the fields of a persisted {{.ModelNameLC}} using a transaction
 // Excluded fields are id, created_at, deleted_at, etc.
-func ({{.ModelVar}} *{{.ModelName}}) UpdateTx(tx *sqlx.Tx) error {
+func ({{.ModelVar}} *{{.ModelName}}) UpdateTx(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
 	}
@@ -130,7 +124,7 @@ func ({{.ModelVar}} *{{.ModelName}}) UpdateTx(tx *sqlx.Tx) error {
 
 {{ if .Generate "doUpdate" -}}
 // doUpdate updates an object in the database using an optional transaction
-func ({{.ModelVar}} *{{.ModelName}}) doUpdate(tx *sqlx.Tx) error {
+func ({{.ModelVar}} *{{.ModelName}}) doUpdate(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
 	}
@@ -142,12 +136,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(tx *sqlx.Tx) error {
 	{{.ModelVar}}.UpdatedAt = db.Now()
 
 	stmt := "{{.UpdateStmt}}"
-	var err error
-	if tx == nil {
-	  _, err = app.GetContext().SQL.NamedExec(stmt, {{.ModelVar}})
-	} else {
-		_, err = tx.NamedExec(stmt, {{.ModelVar}})
-	}
+	_, err := tx.NamedExec(stmt, {{.ModelVar}})
 
 	return err
 }
@@ -156,13 +145,13 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(tx *sqlx.Tx) error {
 {{ if .Generate "FullyDelete" -}}
 // FullyDelete removes an object from the database
 func ({{.ModelVar}} *{{.ModelName}}) FullyDelete() error {
-	return {{.ModelVar}}.FullyDeleteTx(nil)
+	return {{.ModelVar}}.FullyDeleteTx(db.Con())
 }
 {{- end }}
 
 {{ if .Generate "FullyDeleteTx" -}}
 // FullyDeleteTx removes an object from the database using a transaction
-func ({{.ModelVar}} *{{.ModelName}}) FullyDeleteTx(tx *sqlx.Tx) error {
+func ({{.ModelVar}} *{{.ModelName}}) FullyDeleteTx(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return errors.New("{{.ModelNameLC}} not instanced")
 	}
@@ -172,12 +161,7 @@ func ({{.ModelVar}} *{{.ModelName}}) FullyDeleteTx(tx *sqlx.Tx) error {
 	}
 
 	stmt := "DELETE FROM {{.TableName}} WHERE id=$1"
-	var err error
-	if tx == nil {
-	  _, err = app.GetContext().SQL.Exec(stmt, {{.ModelVar}}.ID)
-	} else {
-		_, err = tx.Exec(stmt, {{.ModelVar}}.ID)
-	}
+	_, err := tx.Exec(stmt, {{.ModelVar}}.ID)
 
 	return err
 }
@@ -186,20 +170,20 @@ func ({{.ModelVar}} *{{.ModelName}}) FullyDeleteTx(tx *sqlx.Tx) error {
 {{ if .Generate "Delete" -}}
 // Delete soft delete an object.
 func ({{.ModelVar}} *{{.ModelName}}) Delete() error {
-	return {{.ModelVar}}.DeleteTx(nil)
+	return {{.ModelVar}}.DeleteTx(db.Con())
 }
 {{- end }}
 
 {{ if .Generate "DeleteTx" -}}
 // DeleteTx soft delete an object using a transaction
-func ({{.ModelVar}} *{{.ModelName}}) DeleteTx(tx *sqlx.Tx) error {
+func ({{.ModelVar}} *{{.ModelName}}) DeleteTx(tx sqalx.Node) error {
 	return {{.ModelVar}}.doDelete(tx)
 }
 {{- end }}
 
 {{ if .Generate "doDelete" -}}
 // doDelete performs a soft delete operation on an object using an optional transaction
-func ({{.ModelVar}} *{{.ModelName}}) doDelete(tx *sqlx.Tx) error {
+func ({{.ModelVar}} *{{.ModelName}}) doDelete(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
 	}
@@ -211,12 +195,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doDelete(tx *sqlx.Tx) error {
 	{{.ModelVar}}.DeletedAt = db.Now()
 
 	stmt := "UPDATE {{.TableName}} SET deleted_at = $2 WHERE id=$1"
-	var err error
-	if tx == nil {
-	  _, err = app.GetContext().SQL.Exec(stmt, {{.ModelVar}}.ID, {{.ModelVar}}.DeletedAt)
-	} else {
-		_, err = tx.Exec(stmt, {{.ModelVar}}.ID, {{.ModelVar}}.DeletedAt)
-	}
+	_, err := tx.Exec(stmt, {{.ModelVar}}.ID, {{.ModelVar}}.DeletedAt)
 	return err
 }
 {{- end }}
