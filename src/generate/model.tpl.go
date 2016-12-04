@@ -35,6 +35,20 @@ func JoinSQL(prefix string) string {
 }
 {{- end }}
 
+{{ if .Generate "Get" -}}
+// Get finds and returns an active {{.ModelNameLC}} by ID
+func Get(id string) (*{{.ModelName}}, error) {
+	{{.ModelVar}} := &{{.ModelName}}{}
+	stmt := "SELECT * from {{.TableName}} WHERE id=$1 and deleted_at IS NULL LIMIT 1"
+	err := db.Get({{.ModelVar}}, stmt, id)
+	// We want to return nil if a {{.ModelNameLC}} is not found
+	if {{.ModelVar}}.ID == "" {
+		return nil, err
+	}
+	return {{.ModelVar}}, err
+}
+{{- end }}
+
 {{ if .Generate "Save" -}}
 // Save creates or updates the {{.ModelNameLC}} depending on the value of the id
 func ({{.ModelVar}} *{{.ModelName}}) Save() error {
@@ -59,14 +73,14 @@ func ({{.ModelVar}} *{{.ModelName}}) SaveTx(tx sqalx.Node) error {
 {{- end }}
 
 {{ if .Generate "Create" -}}
-// Create persists a user in the database
+// Create persists a {{.ModelNameLC}} in the database
 func ({{.ModelVar}} *{{.ModelName}}) Create() error {
 	return {{.ModelVar}}.CreateTx(db.Con())
 }
 {{- end }}
 
 {{ if .Generate "CreateTx" -}}
-// Create persists a user in the database
+// Create persists a {{.ModelNameLC}} in the database
 func ({{.ModelVar}} *{{.ModelName}}) CreateTx(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
@@ -81,7 +95,7 @@ func ({{.ModelVar}} *{{.ModelName}}) CreateTx(tx sqalx.Node) error {
 {{- end }}
 
 {{ if .Generate "doCreate" -}}
-// doCreate persists an object in the database using a Node
+// doCreate persists a {{.ModelNameLC}} in the database using a Node
 func ({{.ModelVar}} *{{.ModelName}}) doCreate(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return errors.New("{{.ModelNameLC}} not instanced")
@@ -123,7 +137,7 @@ func ({{.ModelVar}} *{{.ModelName}}) UpdateTx(tx sqalx.Node) error {
 {{- end }}
 
 {{ if .Generate "doUpdate" -}}
-// doUpdate updates an object in the database using an optional transaction
+// doUpdate updates a {{.ModelNameLC}} in the database using an optional transaction
 func ({{.ModelVar}} *{{.ModelName}}) doUpdate(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
@@ -143,14 +157,14 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(tx sqalx.Node) error {
 {{- end }}
 
 {{ if .Generate "FullyDelete" -}}
-// FullyDelete removes an object from the database
+// FullyDelete removes a {{.ModelNameLC}} from the database
 func ({{.ModelVar}} *{{.ModelName}}) FullyDelete() error {
 	return {{.ModelVar}}.FullyDeleteTx(db.Con())
 }
 {{- end }}
 
 {{ if .Generate "FullyDeleteTx" -}}
-// FullyDeleteTx removes an object from the database using a transaction
+// FullyDeleteTx removes a {{.ModelNameLC}} from the database using a transaction
 func ({{.ModelVar}} *{{.ModelName}}) FullyDeleteTx(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return errors.New("{{.ModelNameLC}} not instanced")
@@ -168,21 +182,21 @@ func ({{.ModelVar}} *{{.ModelName}}) FullyDeleteTx(tx sqalx.Node) error {
 {{- end }}
 
 {{ if .Generate "Delete" -}}
-// Delete soft delete an object.
+// Delete soft delete a {{.ModelNameLC}}.
 func ({{.ModelVar}} *{{.ModelName}}) Delete() error {
 	return {{.ModelVar}}.DeleteTx(db.Con())
 }
 {{- end }}
 
 {{ if .Generate "DeleteTx" -}}
-// DeleteTx soft delete an object using a transaction
+// DeleteTx soft delete a {{.ModelNameLC}} using a transaction
 func ({{.ModelVar}} *{{.ModelName}}) DeleteTx(tx sqalx.Node) error {
 	return {{.ModelVar}}.doDelete(tx)
 }
 {{- end }}
 
 {{ if .Generate "doDelete" -}}
-// doDelete performs a soft delete operation on an object using an optional transaction
+// doDelete performs a soft delete operation on a {{.ModelNameLC}} using an optional transaction
 func ({{.ModelVar}} *{{.ModelName}}) doDelete(tx sqalx.Node) error {
 	if {{.ModelVar}} == nil {
 		return apierror.NewServerError("{{.ModelNameLC}} is not instanced")
