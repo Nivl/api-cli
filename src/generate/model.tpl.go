@@ -49,6 +49,16 @@ func Get(id string) (*{{.ModelName}}, error) {
 }
 {{- end }}
 
+{{ if .Generate "Exists" -}}
+// Exists checks if  {{.ModelNameLC}} by ID
+func Exists(id string) (bool, error) {
+	exists := false
+	stmt := "SELECT exists(SELECT 1 FROM {{.TableName}} WHERE id=$1 and deleted_at IS NULL)"
+	err := db.Con().Get(&exists, stmt, id)
+	return exists, err
+}
+{{- end }}
+
 {{ if .Generate "Save" -}}
 // Save creates or updates the {{.ModelNameLC}} depending on the value of the id
 func ({{.ModelVar}} *{{.ModelName}}) Save() error {
