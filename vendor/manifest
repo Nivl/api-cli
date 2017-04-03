@@ -13,7 +13,7 @@
 			"importpath": "github.com/serenize/snaker",
 			"repository": "https://github.com/serenize/snaker",
 			"vcs": "git",
-			"revision": "8824b61eca66d308fcb2d515287d3d7a28dba8d6",
+			"revision": "543781d2b79bd95c51ffe70e70a55c946ca211ff",
 			"branch": "master",
 			"notests": true
 		},
@@ -21,7 +21,7 @@
 			"importpath": "github.com/urfave/cli",
 			"repository": "https://github.com/urfave/cli",
 			"vcs": "git",
-			"revision": "88ae7af8d41d3842891a319ca21e867c490bcb0b",
+			"revision": "8ba6f23b6e36d03666a14bd9421f5e3efcb59aca",
 			"branch": "master",
 			"notests": true
 		},
