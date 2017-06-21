@@ -37,6 +37,7 @@ type Model struct {
 	FullPath    string
 	Fields      []*ModelField
 	Excluded    []string
+	IsSingle    bool
 }
 
 // ModelTemplateVars contains all the variable needed to render the new file
@@ -52,6 +53,7 @@ type ModelTemplateVars struct {
 	UpdateStmtArgs string
 	FieldsAsArray  string
 	Excluded       []string
+	IsSingle       bool
 }
 
 // Generate returns true if the element has not been excluded
@@ -62,6 +64,16 @@ func (mtv *ModelTemplateVars) Generate(wanted string) bool {
 		}
 	}
 	return true
+}
+
+// OptionalName returns the model name if single is set to false. returns
+// an empty string otherwise
+func (mtv *ModelTemplateVars) OptionalName() string {
+	name := ""
+	if !mtv.IsSingle {
+		name = mtv.ModelName
+	}
+	return name
 }
 
 // setDefault control what has been set in the model, and set default values where needed
@@ -130,6 +142,7 @@ func (m *Model) generate() error {
 		TableName:   m.Table,
 		ModelVar:    string(strings.ToLower(m.Name)[0]),
 		PackageName: m.PackageName,
+		IsSingle:    m.IsSingle,
 		Excluded:    m.Excluded,
 	}
 
@@ -251,6 +264,7 @@ func GenModel(c *cli.Context) error {
 		Table:       c.String("table"),
 		FileName:    c.String("file"),
 		PackageName: c.String("package"),
+		IsSingle:    c.BoolT("single"),
 		Excluded:    excluded,
 	}
 

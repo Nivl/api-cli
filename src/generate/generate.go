@@ -27,6 +27,10 @@ func SubCommands() []cli.Command {
 					Name:  "exclude, e",
 					Usage: "Methods to exclude from the generated file",
 				},
+				cli.BoolTFlag{
+					Name:  "single",
+					Usage: "Add the struct name in the global functions",
+				},
 			},
 			Action: func(c *cli.Context) error {
 				GenModel(c)

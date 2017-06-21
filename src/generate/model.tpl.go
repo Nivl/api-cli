@@ -16,8 +16,8 @@ import (
 )
 
 {{ if .Generate "JoinSQL" -}}
-// Join{{.ModelName}}SQL returns a string ready to be embed in a JOIN query
-func Join{{.ModelName}}SQL(prefix string) string {
+// Join{{.OptionalName}}SQL returns a string ready to be embed in a JOIN query
+func Join{{.OptionalName}}SQL(prefix string) string {
 	fields := []string{ {{.FieldsAsArray}} }
 	output := ""
 
@@ -35,11 +35,11 @@ func Join{{.ModelName}}SQL(prefix string) string {
 {{- end }}
 
 {{ if .Generate "Get" -}}
-// Get{{.ModelName}} finds and returns an active {{.ModelNameLC}} by ID
-func Get{{.ModelName}}(id string) (*{{.ModelName}}, error) {
+// Get{{.OptionalName}}ByID finds and returns an active {{.ModelNameLC}} by ID
+func Get{{.OptionalName}}ByID(q db.Queryable, id string) (*{{.ModelName}}, error) {
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 and deleted_at IS NULL LIMIT 1"
-	err := db.Get({{.ModelVar}}, stmt, id)
+	err := db.Get(q, {{.ModelVar}}, stmt, id)
 	// We want to return nil if a {{.ModelNameLC}} is not found
 	if {{.ModelVar}}.ID == "" {
 		return nil, err
@@ -49,48 +49,34 @@ func Get{{.ModelName}}(id string) (*{{.ModelName}}, error) {
 {{- end }}
 
 {{ if .Generate "Exists" -}}
-// {{.ModelName}}Exists checks if a {{.ModelNameLC}} exists for a specific ID
-func {{.ModelName}}Exists(id string) (bool, error) {
+// {{.OptionalName}}Exists checks if a {{.ModelNameLC}} exists for a specific ID
+func {{.OptionalName}}Exists(q db.Queryable, id string) (bool, error) {
 	exists := false
 	stmt := "SELECT exists(SELECT 1 FROM {{.TableName}} WHERE id=$1 and deleted_at IS NULL)"
-	err := db.Writer.Get(&exists, stmt, id)
+	err := db.Get(q, &exists, stmt, id)
 	return exists, err
 }
 {{- end }}
 
 {{ if .Generate "Save" -}}
-// Save creates or updates the {{.ModelNameLC}} depending on the value of the id
-func ({{.ModelVar}} *{{.ModelName}}) Save() error {
-	return {{.ModelVar}}.SaveQ(db.Writer)
-}
-{{- end }}
-
-{{ if .Generate "SaveQ" -}}
-// SaveQ creates or updates the article depending on the value of the id using
+// Save creates or updates the article depending on the value of the id using
 // a transaction
-func ({{.ModelVar}} *{{.ModelName}}) SaveQ(q db.Queryable) error {
+func ({{.ModelVar}} *{{.ModelName}}) Save(q db.Queryable) error {
 	if {{.ModelVar}} == nil {
 		return httperr.NewServerError("{{.ModelNameLC}} is not instanced")
 	}
 
 	if {{.ModelVar}}.ID == "" {
-		return {{.ModelVar}}.CreateQ(q)
+		return {{.ModelVar}}.Create(q)
 	}
 
-	return {{.ModelVar}}.UpdateQ(q)
+	return {{.ModelVar}}.Update(q)
 }
 {{- end }}
 
 {{ if .Generate "Create" -}}
 // Create persists a {{.ModelNameLC}} in the database
-func ({{.ModelVar}} *{{.ModelName}}) Create() error {
-	return {{.ModelVar}}.CreateQ(db.Writer)
-}
-{{- end }}
-
-{{ if .Generate "CreateQ" -}}
-// Create persists a {{.ModelNameLC}} in the database
-func ({{.ModelVar}} *{{.ModelName}}) CreateQ(q db.Queryable) error {
+func ({{.ModelVar}} *{{.ModelName}}) Create(q db.Queryable) error {
 	if {{.ModelVar}} == nil {
 		return httperr.NewServerError("{{.ModelNameLC}} is not instanced")
 	}
@@ -124,17 +110,9 @@ func ({{.ModelVar}} *{{.ModelName}}) doCreate(q db.Queryable) error {
 {{- end }}
 
 {{ if .Generate "Update" -}}
-// Update updates most of the fields of a persisted {{.ModelNameLC}}.
-// Excluded fields are id, created_at, deleted_at, etc.
-func ({{.ModelVar}} *{{.ModelName}}) Update() error {
-	return {{.ModelVar}}.UpdateQ(db.Writer)
-}
-{{- end }}
-
-{{ if .Generate "UpdateQ" -}}
 // Update updates most of the fields of a persisted {{.ModelNameLC}} using a transaction
 // Excluded fields are id, created_at, deleted_at, etc.
-func ({{.ModelVar}} *{{.ModelName}}) UpdateQ(q db.Queryable) error {
+func ({{.ModelVar}} *{{.ModelName}}) Update(q db.Queryable) error {
 	if {{.ModelVar}} == nil {
 		return httperr.NewServerError("{{.ModelNameLC}} is not instanced")
 	}
@@ -168,15 +146,8 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q db.Queryable) error {
 {{- end }}
 
 {{ if .Generate "FullyDelete" -}}
-// FullyDelete removes a {{.ModelNameLC}} from the database
-func ({{.ModelVar}} *{{.ModelName}}) FullyDelete() error {
-	return {{.ModelVar}}.FullyDeleteQ(db.Writer)
-}
-{{- end }}
-
-{{ if .Generate "FullyDeleteQ" -}}
-// FullyDeleteQ removes a {{.ModelNameLC}} from the database using a transaction
-func ({{.ModelVar}} *{{.ModelName}}) FullyDeleteQ(q db.Queryable) error {
+// FullyDelete removes a {{.ModelNameLC}} from the database using a transaction
+func ({{.ModelVar}} *{{.ModelName}}) FullyDelete(q db.Queryable) error {
 	if {{.ModelVar}} == nil {
 		return errors.New("{{.ModelNameLC}} not instanced")
 	}
@@ -192,29 +163,22 @@ func ({{.ModelVar}} *{{.ModelName}}) FullyDeleteQ(q db.Queryable) error {
 }
 {{- end }}
 
-{{ if .Generate "Delete" -}}
-// Delete soft delete a {{.ModelNameLC}}.
-func ({{.ModelVar}} *{{.ModelName}}) Delete() error {
-	return {{.ModelVar}}.DeleteQ(db.Writer)
+{{ if .Generate "Trash" -}}
+// Trash soft delete a {{.ModelNameLC}} using a transaction
+func ({{.ModelVar}} *{{.ModelName}}) Trash(q db.Queryable) error {
+	return {{.ModelVar}}.doTrash(q)
 }
 {{- end }}
 
-{{ if .Generate "DeleteQ" -}}
-// DeleteQ soft delete a {{.ModelNameLC}} using a transaction
-func ({{.ModelVar}} *{{.ModelName}}) DeleteQ(q db.Queryable) error {
-	return {{.ModelVar}}.doDelete(q)
-}
-{{- end }}
-
-{{ if .Generate "doDelete" -}}
-// doDelete performs a soft delete operation on a {{.ModelNameLC}} using an optional transaction
-func ({{.ModelVar}} *{{.ModelName}}) doDelete(q db.Queryable) error {
+{{ if .Generate "doTrash" -}}
+// doTrash performs a soft delete operation on a {{.ModelNameLC}} using an optional transaction
+func ({{.ModelVar}} *{{.ModelName}}) doTrash(q db.Queryable) error {
 	if {{.ModelVar}} == nil {
 		return httperr.NewServerError("{{.ModelNameLC}} is not instanced")
 	}
 
 	if {{.ModelVar}}.ID == "" {
-		return httperr.NewServerError("cannot delete a non-persisted {{.ModelNameLC}}")
+		return httperr.NewServerError("cannot trash a non-persisted {{.ModelNameLC}}")
 	}
 
 	{{.ModelVar}}.DeletedAt = db.Now()
