@@ -13,7 +13,6 @@ import (
 	"github.com/Nivl/go-rest-tools/network/http/httperr"
 	"github.com/Nivl/go-rest-tools/storage/db"
 	uuid "github.com/satori/go.uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 {{ if .Generate "JoinSQL" -}}
@@ -37,7 +36,7 @@ func Join{{.OptionalName}}SQL(prefix string) string {
 
 {{ if .Generate "Get" -}}
 // Get{{.OptionalName}}ByID finds and returns an active {{.ModelNameLC}} by ID
-func Get{{.OptionalName}}ByID(q *sqlx.DB, id string) (*{{.ModelName}}, error) {
+func Get{{.OptionalName}}ByID(q db.DB, id string) (*{{.ModelName}}, error) {
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 and deleted_at IS NULL LIMIT 1"
 	err := db.Get(q, {{.ModelVar}}, stmt, id)
@@ -51,7 +50,7 @@ func Get{{.OptionalName}}ByID(q *sqlx.DB, id string) (*{{.ModelName}}, error) {
 
 {{ if .Generate "Exists" -}}
 // {{.OptionalName}}Exists checks if a {{.ModelNameLC}} exists for a specific ID
-func {{.OptionalName}}Exists(q *sqlx.DB, id string) (bool, error) {
+func {{.OptionalName}}Exists(q db.DB, id string) (bool, error) {
 	exists := false
 	stmt := "SELECT exists(SELECT 1 FROM {{.TableName}} WHERE id=$1 and deleted_at IS NULL)"
 	err := db.Get(q, &exists, stmt, id)
@@ -62,11 +61,7 @@ func {{.OptionalName}}Exists(q *sqlx.DB, id string) (bool, error) {
 {{ if .Generate "Save" -}}
 // Save creates or updates the article depending on the value of the id using
 // a transaction
-func ({{.ModelVar}} *{{.ModelName}}) Save(q *sqlx.DB) error {
-	if {{.ModelVar}} == nil {
-		return httperr.NewServerError("{{.ModelNameLC}} is not instanced")
-	}
-
+func ({{.ModelVar}} *{{.ModelName}}) Save(q db.DB) error {
 	if {{.ModelVar}}.ID == "" {
 		return {{.ModelVar}}.Create(q)
 	}
@@ -77,13 +72,9 @@ func ({{.ModelVar}} *{{.ModelName}}) Save(q *sqlx.DB) error {
 
 {{ if .Generate "Create" -}}
 // Create persists a {{.ModelNameLC}} in the database
-func ({{.ModelVar}} *{{.ModelName}}) Create(q *sqlx.DB) error {
-	if {{.ModelVar}} == nil {
-		return httperr.NewServerError("{{.ModelNameLC}} is not instanced")
-	}
-
+func ({{.ModelVar}} *{{.ModelName}}) Create(q db.DB) error {
 	if {{.ModelVar}}.ID != "" {
-		return httperr.NewServerError("cannot persist a {{.ModelNameLC}} that already has an ID")
+		return errors.New("cannot persist a {{.ModelNameLC}} that already has an ID")
 	}
 
 	return {{.ModelVar}}.doCreate(q)
@@ -92,7 +83,7 @@ func ({{.ModelVar}} *{{.ModelName}}) Create(q *sqlx.DB) error {
 
 {{ if .Generate "doCreate" -}}
 // doCreate persists a {{.ModelNameLC}} in the database using a Node
-func ({{.ModelVar}} *{{.ModelName}}) doCreate(q *sqlx.DB) error {
+func ({{.ModelVar}} *{{.ModelName}}) doCreate(q db.DB) error {
 	if {{.ModelVar}} == nil {
 		return errors.New("{{.ModelNameLC}} not instanced")
 	}
@@ -106,20 +97,16 @@ func ({{.ModelVar}} *{{.ModelName}}) doCreate(q *sqlx.DB) error {
 	stmt := "{{.CreateStmt}}"
 	_, err := q.NamedExec(stmt, {{.ModelVar}})
 
-  return err
+  return httperr.NewFromSQL(err)
 }
 {{- end }}
 
 {{ if .Generate "Update" -}}
 // Update updates most of the fields of a persisted {{.ModelNameLC}} using a transaction
 // Excluded fields are id, created_at, deleted_at, etc.
-func ({{.ModelVar}} *{{.ModelName}}) Update(q *sqlx.DB) error {
-	if {{.ModelVar}} == nil {
-		return httperr.NewServerError("{{.ModelNameLC}} is not instanced")
-	}
-
+func ({{.ModelVar}} *{{.ModelName}}) Update(q db.DB) error {
 	if {{.ModelVar}}.ID == "" {
-		return httperr.NewServerError("cannot update a non-persisted {{.ModelNameLC}}")
+		return errors.New("cannot update a non-persisted {{.ModelNameLC}}")
 	}
 
 	return {{.ModelVar}}.doUpdate(q)
@@ -128,13 +115,9 @@ func ({{.ModelVar}} *{{.ModelName}}) Update(q *sqlx.DB) error {
 
 {{ if .Generate "doUpdate" -}}
 // doUpdate updates a {{.ModelNameLC}} in the database using an optional transaction
-func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q *sqlx.DB) error {
-	if {{.ModelVar}} == nil {
-		return httperr.NewServerError("{{.ModelNameLC}} is not instanced")
-	}
-
+func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q db.DB) error {
 	if {{.ModelVar}}.ID == "" {
-		return httperr.NewServerError("cannot update a non-persisted {{.ModelNameLC}}")
+		return errors.New("cannot update a non-persisted {{.ModelNameLC}}")
 	}
 
 	{{.ModelVar}}.UpdatedAt = db.Now()
@@ -142,13 +125,13 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q *sqlx.DB) error {
 	stmt := "{{.UpdateStmt}}"
 	_, err := q.NamedExec(stmt, {{.ModelVar}})
 
-	return err
+	return httperr.NewFromSQL(err)
 }
 {{- end }}
 
 {{ if .Generate "Delete" -}}
 // Delete removes a {{.ModelNameLC}} from the database using a transaction
-func ({{.ModelVar}} *{{.ModelName}}) Delete(q *sqlx.DB) error {
+func ({{.ModelVar}} *{{.ModelName}}) Delete(q db.DB) error {
 	if {{.ModelVar}} == nil {
 		return errors.New("{{.ModelNameLC}} not instanced")
 	}
@@ -166,20 +149,16 @@ func ({{.ModelVar}} *{{.ModelName}}) Delete(q *sqlx.DB) error {
 
 {{ if .Generate "Trash" -}}
 // Trash soft delete a {{.ModelNameLC}} using a transaction
-func ({{.ModelVar}} *{{.ModelName}}) Trash(q *sqlx.DB) error {
+func ({{.ModelVar}} *{{.ModelName}}) Trash(q db.DB) error {
 	return {{.ModelVar}}.doTrash(q)
 }
 {{- end }}
 
 {{ if .Generate "doTrash" -}}
 // doTrash performs a soft delete operation on a {{.ModelNameLC}} using an optional transaction
-func ({{.ModelVar}} *{{.ModelName}}) doTrash(q *sqlx.DB) error {
-	if {{.ModelVar}} == nil {
-		return httperr.NewServerError("{{.ModelNameLC}} is not instanced")
-	}
-
+func ({{.ModelVar}} *{{.ModelName}}) doTrash(q db.DB) error {
 	if {{.ModelVar}}.ID == "" {
-		return httperr.NewServerError("cannot trash a non-persisted {{.ModelNameLC}}")
+		return errors.New("cannot trash a non-persisted {{.ModelNameLC}}")
 	}
 
 	{{.ModelVar}}.DeletedAt = db.Now()
