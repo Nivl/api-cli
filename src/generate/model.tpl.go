@@ -102,7 +102,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doCreate(q db.DB) error {
 {{- end }}
 
 {{ if .Generate "Update" -}}
-// Update updates most of the fields of a persisted {{.ModelNameLC}} using a transaction
+// Update updates most of the fields of a persisted {{.ModelNameLC}}
 // Excluded fields are id, created_at, deleted_at, etc.
 func ({{.ModelVar}} *{{.ModelName}}) Update(q db.DB) error {
 	if {{.ModelVar}}.ID == "" {
@@ -114,7 +114,7 @@ func ({{.ModelVar}} *{{.ModelName}}) Update(q db.DB) error {
 {{- end }}
 
 {{ if .Generate "doUpdate" -}}
-// doUpdate updates a {{.ModelNameLC}} in the database using an optional transaction
+// doUpdate updates a {{.ModelNameLC}} in the database
 func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q db.DB) error {
 	if {{.ModelVar}}.ID == "" {
 		return errors.New("cannot update a non-persisted {{.ModelNameLC}}")
@@ -130,7 +130,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q db.DB) error {
 {{- end }}
 
 {{ if .Generate "Delete" -}}
-// Delete removes a {{.ModelNameLC}} from the database using a transaction
+// Delete removes a {{.ModelNameLC}} from the database
 func ({{.ModelVar}} *{{.ModelName}}) Delete(q db.DB) error {
 	if {{.ModelVar}} == nil {
 		return errors.New("{{.ModelNameLC}} not instanced")
@@ -143,28 +143,6 @@ func ({{.ModelVar}} *{{.ModelName}}) Delete(q db.DB) error {
 	stmt := "DELETE FROM {{.TableName}} WHERE id=$1"
 	_, err := q.Exec(stmt, {{.ModelVar}}.ID)
 
-	return err
-}
-{{- end }}
-
-{{ if .Generate "Trash" -}}
-// Trash soft delete a {{.ModelNameLC}} using a transaction
-func ({{.ModelVar}} *{{.ModelName}}) Trash(q db.DB) error {
-	return {{.ModelVar}}.doTrash(q)
-}
-{{- end }}
-
-{{ if .Generate "doTrash" -}}
-// doTrash performs a soft delete operation on a {{.ModelNameLC}} using an optional transaction
-func ({{.ModelVar}} *{{.ModelName}}) doTrash(q db.DB) error {
-	if {{.ModelVar}}.ID == "" {
-		return errors.New("cannot trash a non-persisted {{.ModelNameLC}}")
-	}
-
-	{{.ModelVar}}.DeletedAt = db.Now()
-
-	stmt := "UPDATE {{.TableName}} SET deleted_at = $2 WHERE id=$1"
-	_, err := q.Exec(stmt, {{.ModelVar}}.ID, {{.ModelVar}}.DeletedAt)
 	return err
 }
 {{- end }}
