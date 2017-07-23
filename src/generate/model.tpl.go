@@ -147,6 +147,20 @@ func ({{.ModelVar}} *{{.ModelName}}) Delete(q db.DB) error {
 }
 {{- end }}
 
+{{ if .Generate "GetID" -}}
+// GetID returns the ID field
+func ({{.ModelVar}} *{{.ModelName}}) GetID() string {
+	return {{.ModelVar}}.ID
+}
+{{- end }}
+
+{{ if .Generate "SetID" -}}
+// SetID sets the ID field
+func ({{.ModelVar}} *{{.ModelName}}) SetID(id string) {
+	{{.ModelVar}}.ID = id
+}
+{{- end }}
+
 {{ if .Generate "IsZero" -}}
 // IsZero checks if the object is either nil or don't have an ID
 func ({{.ModelVar}} *{{.ModelName}}) IsZero() bool {
