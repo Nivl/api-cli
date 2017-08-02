@@ -36,9 +36,25 @@ func Join{{.OptionalName}}SQL(prefix string) string {
 
 {{ if .Generate "Get" -}}
 // Get{{.OptionalName}}ByID finds and returns an active {{.ModelNameLC}} by ID
+// Deleted object are not returned
 func Get{{.OptionalName}}ByID(q db.DB, id string) (*{{.ModelName}}, error) {
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 and deleted_at IS NULL LIMIT 1"
+	err := db.Get(q, {{.ModelVar}}, stmt, id)
+	// We want to return nil if a {{.ModelNameLC}} is not found
+	if {{.ModelVar}}.ID == "" {
+		return nil, err
+	}
+	return {{.ModelVar}}, err
+}
+{{- end }}
+
+{{ if .Generate "GetAny" -}}
+// GetAny{{.OptionalName}}ByID finds and returns an {{.ModelNameLC}} by ID.
+// Deleted object are returned
+func GetAny{{.OptionalName}}ByID(q db.DB, id string) (*{{.ModelName}}, error) {
+	{{.ModelVar}} := &{{.ModelName}}{}
+	stmt := "SELECT * from {{.TableName}} WHERE id=$1 LIMIT 1"
 	err := db.Get(q, {{.ModelVar}}, stmt, id)
 	// We want to return nil if a {{.ModelNameLC}} is not found
 	if {{.ModelVar}}.ID == "" {
