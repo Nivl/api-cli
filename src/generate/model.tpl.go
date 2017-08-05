@@ -10,7 +10,7 @@ import (
 	"fmt"
 	{{- end }}
 
-	"github.com/Nivl/go-rest-tools/network/http/httperr"
+	"github.com/Nivl/go-rest-tools/types/apierror"
 	"github.com/Nivl/go-rest-tools/storage/db"
 	uuid "github.com/satori/go.uuid"
 )
@@ -40,12 +40,8 @@ func Join{{.OptionalName}}SQL(prefix string) string {
 func Get{{.OptionalName}}ByID(q db.DB, id string) (*{{.ModelName}}, error) {
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 and deleted_at IS NULL LIMIT 1"
-	err := db.Get(q, {{.ModelVar}}, stmt, id)
-	// We want to return nil if a {{.ModelNameLC}} is not found
-	if {{.ModelVar}}.ID == "" {
-		return nil, err
-	}
-	return {{.ModelVar}}, err
+	err := q.Get({{.ModelVar}}, stmt, id)
+	return {{.ModelVar}}, apierror.NewFromSQL(err)
 }
 {{- end }}
 
@@ -55,12 +51,8 @@ func Get{{.OptionalName}}ByID(q db.DB, id string) (*{{.ModelName}}, error) {
 func GetAny{{.OptionalName}}ByID(q db.DB, id string) (*{{.ModelName}}, error) {
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 LIMIT 1"
-	err := db.Get(q, {{.ModelVar}}, stmt, id)
-	// We want to return nil if a {{.ModelNameLC}} is not found
-	if {{.ModelVar}}.ID == "" {
-		return nil, err
-	}
-	return {{.ModelVar}}, err
+	err := q.Get({{.ModelVar}}, stmt, id)
+	return {{.ModelVar}}, apierror.NewFromSQL(err)
 }
 {{- end }}
 
@@ -113,7 +105,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doCreate(q db.DB) error {
 	stmt := "{{.CreateStmt}}"
 	_, err := q.NamedExec(stmt, {{.ModelVar}})
 
-  return httperr.NewFromSQL(err)
+  return apierror.NewFromSQL(err)
 }
 {{- end }}
 
@@ -141,7 +133,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q db.DB) error {
 	stmt := "{{.UpdateStmt}}"
 	_, err := q.NamedExec(stmt, {{.ModelVar}})
 
-	return httperr.NewFromSQL(err)
+	return apierror.NewFromSQL(err)
 }
 {{- end }}
 
