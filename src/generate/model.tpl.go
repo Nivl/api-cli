@@ -2,7 +2,7 @@ package generate
 
 var modelTpl = `package {{.PackageName}}
 
-// Code auto-generated; DO NOT EDIT
+// Code generated; DO NOT EDIT.
 
 import (
 	"errors"
