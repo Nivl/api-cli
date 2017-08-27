@@ -37,7 +37,7 @@ func Join{{.OptionalName}}SQL(prefix string) string {
 {{ if .Generate "Get" -}}
 // Get{{.OptionalName}}ByID finds and returns an active {{.ModelNameLC}} by ID
 // Deleted object are not returned
-func Get{{.OptionalName}}ByID(q db.DB, id string) (*{{.ModelName}}, error) {
+func Get{{.OptionalName}}ByID(q db.Queryable, id string) (*{{.ModelName}}, error) {
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 and deleted_at IS NULL LIMIT 1"
 	err := q.Get({{.ModelVar}}, stmt, id)
@@ -48,7 +48,7 @@ func Get{{.OptionalName}}ByID(q db.DB, id string) (*{{.ModelName}}, error) {
 {{ if .Generate "GetAny" -}}
 // GetAny{{.OptionalName}}ByID finds and returns an {{.ModelNameLC}} by ID.
 // Deleted object are returned
-func GetAny{{.OptionalName}}ByID(q db.DB, id string) (*{{.ModelName}}, error) {
+func GetAny{{.OptionalName}}ByID(q db.Queryable, id string) (*{{.ModelName}}, error) {
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 LIMIT 1"
 	err := q.Get({{.ModelVar}}, stmt, id)
@@ -56,20 +56,11 @@ func GetAny{{.OptionalName}}ByID(q db.DB, id string) (*{{.ModelName}}, error) {
 }
 {{- end }}
 
-{{ if .Generate "Exists" -}}
-// {{.OptionalName}}Exists checks if a {{.ModelNameLC}} exists for a specific ID
-func {{.OptionalName}}Exists(q db.DB, id string) (bool, error) {
-	exists := false
-	stmt := "SELECT exists(SELECT 1 FROM {{.TableName}} WHERE id=$1 and deleted_at IS NULL)"
-	err := db.Get(q, &exists, stmt, id)
-	return exists, err
-}
-{{- end }}
 
 {{ if .Generate "Save" -}}
 // Save creates or updates the article depending on the value of the id using
 // a transaction
-func ({{.ModelVar}} *{{.ModelName}}) Save(q db.DB) error {
+func ({{.ModelVar}} *{{.ModelName}}) Save(q db.Queryable) error {
 	if {{.ModelVar}}.ID == "" {
 		return {{.ModelVar}}.Create(q)
 	}
@@ -80,7 +71,7 @@ func ({{.ModelVar}} *{{.ModelName}}) Save(q db.DB) error {
 
 {{ if .Generate "Create" -}}
 // Create persists a {{.ModelNameLC}} in the database
-func ({{.ModelVar}} *{{.ModelName}}) Create(q db.DB) error {
+func ({{.ModelVar}} *{{.ModelName}}) Create(q db.Queryable) error {
 	if {{.ModelVar}}.ID != "" {
 		return errors.New("cannot persist a {{.ModelNameLC}} that already has an ID")
 	}
@@ -91,7 +82,7 @@ func ({{.ModelVar}} *{{.ModelName}}) Create(q db.DB) error {
 
 {{ if .Generate "doCreate" -}}
 // doCreate persists a {{.ModelNameLC}} in the database using a Node
-func ({{.ModelVar}} *{{.ModelName}}) doCreate(q db.DB) error {
+func ({{.ModelVar}} *{{.ModelName}}) doCreate(q db.Queryable) error {
 	if {{.ModelVar}} == nil {
 		return errors.New("{{.ModelNameLC}} not instanced")
 	}
@@ -112,7 +103,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doCreate(q db.DB) error {
 {{ if .Generate "Update" -}}
 // Update updates most of the fields of a persisted {{.ModelNameLC}}
 // Excluded fields are id, created_at, deleted_at, etc.
-func ({{.ModelVar}} *{{.ModelName}}) Update(q db.DB) error {
+func ({{.ModelVar}} *{{.ModelName}}) Update(q db.Queryable) error {
 	if {{.ModelVar}}.ID == "" {
 		return errors.New("cannot update a non-persisted {{.ModelNameLC}}")
 	}
@@ -123,7 +114,7 @@ func ({{.ModelVar}} *{{.ModelName}}) Update(q db.DB) error {
 
 {{ if .Generate "doUpdate" -}}
 // doUpdate updates a {{.ModelNameLC}} in the database
-func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q db.DB) error {
+func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q db.Queryable) error {
 	if {{.ModelVar}}.ID == "" {
 		return errors.New("cannot update a non-persisted {{.ModelNameLC}}")
 	}
@@ -139,7 +130,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q db.DB) error {
 
 {{ if .Generate "Delete" -}}
 // Delete removes a {{.ModelNameLC}} from the database
-func ({{.ModelVar}} *{{.ModelName}}) Delete(q db.DB) error {
+func ({{.ModelVar}} *{{.ModelName}}) Delete(q db.Queryable) error {
 	if {{.ModelVar}} == nil {
 		return errors.New("{{.ModelNameLC}} not instanced")
 	}
