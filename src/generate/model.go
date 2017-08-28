@@ -131,21 +131,11 @@ func (m *Model) Parse() error {
 		return err
 	}
 
-	return m.generate()
+	return m.generateAll()
 }
 
-// generate generates the new file
-func (m *Model) generate() error {
-	vars := &ModelTemplateVars{
-		ModelName:   m.Name,
-		ModelNameLC: strings.ToLower(m.Name),
-		TableName:   m.Table,
-		ModelVar:    string(strings.ToLower(m.Name)[0]),
-		PackageName: m.PackageName,
-		IsSingle:    m.IsSingle,
-		Excluded:    m.Excluded,
-	}
-
+// generateModelFile generates the model file
+func (m *Model) generateModelFile(vars *ModelTemplateVars) error {
 	// Array of Fields
 	fieldsAsArray := make([]string, len(m.Fields))
 	for i, field := range m.Fields {
@@ -193,7 +183,7 @@ func (m *Model) generate() error {
 	output := strings.TrimSpace(buf.String())
 
 	// Write the new file to the disk
-	newFile, err := os.Create(m.generatedFileName())
+	newFile, err := os.Create(m.generatedFileNameModel())
 	if err != nil {
 		return err
 	}
@@ -205,9 +195,63 @@ func (m *Model) generate() error {
 	return nil
 }
 
-// generatedFileName returns the file name of the new file
-func (m *Model) generatedFileName() string {
+// generateTests generates the test file
+func (m *Model) generateTestsFile(vars *ModelTemplateVars) error {
+	// Get the template and parse it with the variables we have
+	t, err := template.New("tests").Parse(modelTestTpl)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	buf := &bytes.Buffer{}
+	if err := t.Execute(buf, vars); err != nil {
+		fmt.Println(err)
+		return err
+	}
+	output := strings.TrimSpace(buf.String())
+
+	// Write the new file to the disk
+	newFile, err := os.Create(m.generatedFileNameTests())
+	if err != nil {
+		return err
+	}
+	defer newFile.Close()
+	if _, err := newFile.WriteString(output); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// generate generates the model file
+func (m *Model) generateAll() error {
+	vars := &ModelTemplateVars{
+		ModelName:   m.Name,
+		ModelNameLC: strings.ToLower(m.Name),
+		TableName:   m.Table,
+		ModelVar:    string(strings.ToLower(m.Name)[0]),
+		PackageName: m.PackageName,
+		IsSingle:    m.IsSingle,
+		Excluded:    m.Excluded,
+	}
+
+	if err := m.generateModelFile(vars); err != nil {
+		return nil
+	}
+	if err := m.generateTestsFile(vars); err != nil {
+		return nil
+	}
+	return nil
+}
+
+// generatedFileNameModel returns the file name of the new file
+func (m *Model) generatedFileNameModel() string {
 	return strings.TrimSuffix(m.FullPath, ".go") + "_generated.go"
+}
+
+// generatedFileNameTests returns the file name of the new test file
+func (m *Model) generatedFileNameTests() string {
+	return strings.TrimSuffix(m.generatedFileNameModel(), ".go") + "_test.go"
 }
 
 // parseTarget parses the source file to get the Model fields

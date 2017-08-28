@@ -83,10 +83,6 @@ func ({{.ModelVar}} *{{.ModelName}}) Create(q db.Queryable) error {
 {{ if .Generate "doCreate" -}}
 // doCreate persists a {{.ModelNameLC}} in the database using a Node
 func ({{.ModelVar}} *{{.ModelName}}) doCreate(q db.Queryable) error {
-	if {{.ModelVar}} == nil {
-		return errors.New("{{.ModelNameLC}} not instanced")
-	}
-
 	{{.ModelVar}}.ID = uuid.NewV4().String()
 	{{.ModelVar}}.UpdatedAt = db.Now()
 	if {{.ModelVar}}.CreatedAt == nil {
@@ -131,10 +127,6 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q db.Queryable) error {
 {{ if .Generate "Delete" -}}
 // Delete removes a {{.ModelNameLC}} from the database
 func ({{.ModelVar}} *{{.ModelName}}) Delete(q db.Queryable) error {
-	if {{.ModelVar}} == nil {
-		return errors.New("{{.ModelNameLC}} not instanced")
-	}
-
 	if {{.ModelVar}}.ID == "" {
 		return errors.New("{{.ModelNameLC}} has not been saved")
 	}
