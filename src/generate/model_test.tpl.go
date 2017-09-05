@@ -7,13 +7,13 @@ var modelTestTpl = `package {{.PackageName}}
 import (
 	"testing"
 
-		"github.com/Nivl/go-rest-tools/storage/db"
-
 		"github.com/stretchr/testify/assert"
 
 		"github.com/satori/go.uuid"
 
 		"github.com/Nivl/go-rest-tools/storage/db/mockdb"
+
+	{{ if or (.Generate "doCreate") (.Generate "doUpdate") }}"github.com/Nivl/go-rest-tools/types/datetime"{{ end }}
 )
 
 
@@ -91,7 +91,7 @@ func Test{{.ModelName}}DoCreateWithDate(t *testing.T) {
 	mockDB := &mockdb.Queryable{}
 	mockDB.ExpectInsert("*{{.PackageName}}.{{.ModelName}}")
 
-	createdAt := db.Now().AddDate(0, 0, 1)
+	createdAt := datetime.Now().AddDate(0, 0, 1)
 	{{.ModelVar}} := &{{.ModelName}}{CreatedAt: createdAt}
 	err := {{.ModelVar}}.doCreate(mockDB)
 

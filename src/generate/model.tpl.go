@@ -6,11 +6,10 @@ var modelTpl = `package {{.PackageName}}
 
 import (
 	"errors"
-	{{ if .Generate "JoinSQL" -}}
-	"fmt"
-	{{- end }}
+	{{ if .Generate "JoinSQL"}}"fmt"{{ end }}
 
 	"github.com/Nivl/go-rest-tools/types/apierror"
+	{{ if or (.Generate "doCreate") (.Generate "doUpdate") }}"github.com/Nivl/go-rest-tools/types/datetime"{{ end }}
 	"github.com/Nivl/go-rest-tools/storage/db"
 	uuid "github.com/satori/go.uuid"
 )
@@ -84,9 +83,9 @@ func ({{.ModelVar}} *{{.ModelName}}) Create(q db.Queryable) error {
 // doCreate persists a {{.ModelNameLC}} in the database using a Node
 func ({{.ModelVar}} *{{.ModelName}}) doCreate(q db.Queryable) error {
 	{{.ModelVar}}.ID = uuid.NewV4().String()
-	{{.ModelVar}}.UpdatedAt = db.Now()
+	{{.ModelVar}}.UpdatedAt = datetime.Now()
 	if {{.ModelVar}}.CreatedAt == nil {
-		{{.ModelVar}}.CreatedAt = db.Now()
+		{{.ModelVar}}.CreatedAt = datetime.Now()
 	}
 
 	stmt := "{{.CreateStmt}}"
@@ -115,7 +114,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q db.Queryable) error {
 		return errors.New("cannot update a non-persisted {{.ModelNameLC}}")
 	}
 
-	{{.ModelVar}}.UpdatedAt = db.Now()
+	{{.ModelVar}}.UpdatedAt = datetime.Now()
 
 	stmt := "{{.UpdateStmt}}"
 	_, err := q.NamedExec(stmt, {{.ModelVar}})
