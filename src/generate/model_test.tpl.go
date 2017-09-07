@@ -5,17 +5,29 @@ var modelTestTpl = `package {{.PackageName}}
 // Code generated; DO NOT EDIT.
 
 import (
+	{{ if .Generate "JoinSQL" -}}"strings"{{- end }}
+
 	"testing"
 
-		"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 
-		"github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
-		"github.com/Nivl/go-rest-tools/storage/db/mockdb"
+	"github.com/Nivl/go-rest-tools/storage/db/mockdb"
 
 	{{ if or (.Generate "doCreate") (.Generate "doUpdate") }}"github.com/Nivl/go-rest-tools/types/datetime"{{ end }}
 )
 
+{{ if .Generate "JoinSQL" -}}
+func TestJoin{{.OptionalName}}SQL(t *testing.T) {
+	fields := []string{ {{.FieldsAsArray}} }
+	totalFields := len(fields)
+	output := Join{{.OptionalName}}SQL("tofind")
+
+	assert.Equal(t, totalFields*2, strings.Count(output, "tofind."), "wrong number of fields returned")
+	assert.True(t, strings.HasSuffix(output, "\""), "JoinSQL() output should end with a \"")
+}
+{{- end }}
 
 {{ if .Generate "Save" -}}
 func Test{{.ModelName}}SaveNew(t *testing.T) {

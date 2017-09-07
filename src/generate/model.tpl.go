@@ -6,7 +6,10 @@ var modelTpl = `package {{.PackageName}}
 
 import (
 	"errors"
-	{{ if .Generate "JoinSQL"}}"fmt"{{ end }}
+	{{ if .Generate "JoinSQL"}}
+	"fmt"
+	"strings"
+	{{ end }}
 
 	"github.com/Nivl/go-rest-tools/types/apierror"
 	{{ if or (.Generate "doCreate") (.Generate "doUpdate") }}"github.com/Nivl/go-rest-tools/types/datetime"{{ end }}
@@ -20,16 +23,11 @@ func Join{{.OptionalName}}SQL(prefix string) string {
 	fields := []string{ {{.FieldsAsArray}} }
 	output := ""
 
-	for i, field := range fields {
-		if i != 0 {
-			output += ", "
-		}
-
+	for _, field := range fields {
 		fullName := fmt.Sprintf("%s.%s", prefix, field)
-		output += fmt.Sprintf("%s \"%s\"", fullName, fullName)
+		output += fmt.Sprintf("%s \"%s\", ", fullName, fullName)
 	}
-
-	return output
+	return strings.TrimSuffix(output, ", ")
 }
 {{- end }}
 
