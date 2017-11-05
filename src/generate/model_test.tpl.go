@@ -32,6 +32,34 @@ func TestJoin{{.OptionalName}}SQL(t *testing.T) {
 }
 {{- end }}
 
+{{ if .Generate "Get" -}}
+func TestGet{{.OptionalName}}ByID(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	expectedID := "4408d5e1-b510-42cb-8ff8-788948a246dd"
+	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
+	mockDB.EXPECT().GetID(&{{.ModelName}}{}, expectedID, nil)
+
+	_, err := Get{{.OptionalName}}ByID(mockDB, expectedID)
+	assert.NoError(t, err, "Get{{.OptionalName}}ByID() should not have failed")
+}
+{{- end }}
+
+{{ if .Generate "GetAny" -}}
+func TestGetAny{{.OptionalName}}ByID(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	expectedID := "4408d5e1-b510-42cb-8ff8-788948a246dd"
+	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
+	mockDB.EXPECT().GetID(&{{.ModelName}}{}, expectedID, nil)
+
+	_, err := Get{{.OptionalName}}ByID(mockDB, expectedID)
+	assert.NoError(t, err, "Get{{.OptionalName}}ByID() should not have failed")
+}
+{{- end }}
+
 {{ if .Generate "Save" -}}
 func Test{{.ModelName}}SaveNew(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
