@@ -38,7 +38,7 @@ func Test{{.ModelName}}SaveNew(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
-	mockDB.EXPECT().InsertSuccess("*{{.PackageName}}.{{.ModelName}}")
+	mockDB.EXPECT().InsertSuccess(&{{.ModelName}}{})
 
 	{{.ModelVar}} := &{{.ModelName}}{}
 	err := {{.ModelVar}}.Save(mockDB)
@@ -52,7 +52,7 @@ func Test{{.ModelName}}SaveExisting(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
-	mockDB.EXPECT().UpdateSuccess("*{{.PackageName}}.{{.ModelName}}")
+	mockDB.EXPECT().UpdateSuccess(&{{.ModelName}}{})
 
 	{{.ModelVar}} := &{{.ModelName}}{}
 	id := uuid.NewV4().String()
@@ -70,7 +70,7 @@ func Test{{.ModelName}}Create(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
-	mockDB.EXPECT().InsertSuccess("*{{.PackageName}}.{{.ModelName}}")
+	mockDB.EXPECT().InsertSuccess(&{{.ModelName}}{})
 
 	{{.ModelVar}} := &{{.ModelName}}{}
 	err := {{.ModelVar}}.Create(mockDB)
@@ -101,7 +101,7 @@ func Test{{.ModelName}}DoCreate(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
-	mockDB.EXPECT().InsertSuccess("*{{.PackageName}}.{{.ModelName}}")
+	mockDB.EXPECT().InsertSuccess(&{{.ModelName}}{})
 
 	{{.ModelVar}} := &{{.ModelName}}{}
 	err := {{.ModelVar}}.doCreate(mockDB)
@@ -117,7 +117,7 @@ func Test{{.ModelName}}DoCreateWithDate(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
-	mockDB.EXPECT().InsertSuccess("*{{.PackageName}}.{{.ModelName}}")
+	mockDB.EXPECT().InsertSuccess(&{{.ModelName}}{})
 
 	createdAt := datetime.Now().AddDate(0, 0, 1)
 	{{.ModelVar}} := &{{.ModelName}}{CreatedAt: createdAt}
@@ -134,7 +134,7 @@ func Test{{.ModelName}}DoCreateFail(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
-	mockDB.EXPECT().InsertError("*{{.PackageName}}.{{.ModelName}}", errors.New("sql error"))
+	mockDB.EXPECT().InsertError(&{{.ModelName}}{}, errors.New("sql error"))
 
 	{{.ModelVar}} := &{{.ModelName}}{}
 	err := {{.ModelVar}}.doCreate(mockDB)
@@ -150,7 +150,7 @@ func Test{{.ModelName}}Update(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
-	mockDB.EXPECT().UpdateSuccess("*{{.PackageName}}.{{.ModelName}}")
+	mockDB.EXPECT().UpdateSuccess(&{{.ModelName}}{})
 
 	{{.ModelVar}} := &{{.ModelName}}{}
 	{{.ModelVar}}.ID = uuid.NewV4().String()
@@ -180,7 +180,7 @@ func Test{{.ModelName}}DoUpdate(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
-	mockDB.EXPECT().UpdateSuccess("*{{.PackageName}}.{{.ModelName}}")
+	mockDB.EXPECT().UpdateSuccess(&{{.ModelName}}{})
 
 	{{.ModelVar}} := &{{.ModelName}}{}
 	{{.ModelVar}}.ID = uuid.NewV4().String()
@@ -207,7 +207,7 @@ func Test{{.ModelName}}DoUpdateFail(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
-	mockDB.EXPECT().UpdateError("*{{.PackageName}}.{{.ModelName}}", errors.New("sql error"))
+	mockDB.EXPECT().UpdateError(&{{.ModelName}}{}, errors.New("sql error"))
 
 	{{.ModelVar}} := &{{.ModelName}}{}
 	{{.ModelVar}}.ID = uuid.NewV4().String()
