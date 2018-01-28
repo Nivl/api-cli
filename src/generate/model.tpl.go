@@ -11,7 +11,7 @@ import (
 	"strings"
 	{{ end }}
 
-	"github.com/Nivl/go-rest-tools/types/apierror"
+	"github.com/Nivl/go-rest-tools/types/apperror"
 	{{ if or (.Generate "doCreate") (.Generate "doUpdate") }}"github.com/Nivl/go-types/datetime"{{ end }}
 	"github.com/Nivl/go-sqldb"
 	{{ if .UseUUID }}uuid "github.com/satori/go.uuid"{{ end }}
@@ -38,7 +38,7 @@ func Get{{.OptionalName}}ByID(q sqldb.Queryable, id string) (*{{.ModelName}}, er
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 and deleted_at IS NULL LIMIT 1"
 	err := q.Get({{.ModelVar}}, stmt, id)
-	return {{.ModelVar}}, apierror.NewFromSQL(err)
+	return {{.ModelVar}}, apperror.NewFromSQL(err)
 }
 {{- end }}
 
@@ -49,7 +49,7 @@ func GetAny{{.OptionalName}}ByID(q sqldb.Queryable, id string) (*{{.ModelName}},
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 LIMIT 1"
 	err := q.Get({{.ModelVar}}, stmt, id)
-	return {{.ModelVar}}, apierror.NewFromSQL(err)
+	return {{.ModelVar}}, apperror.NewFromSQL(err)
 }
 {{- end }}
 
@@ -91,7 +91,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doCreate(q sqldb.Queryable) error {
 	stmt := "{{.CreateStmt}}"
 	_, err := q.NamedExec(stmt, {{.ModelVar}})
 
-  return apierror.NewFromSQL(err)
+  return apperror.NewFromSQL(err)
 }
 {{- end }}
 
@@ -119,7 +119,7 @@ func ({{.ModelVar}} *{{.ModelName}}) doUpdate(q sqldb.Queryable) error {
 	stmt := "{{.UpdateStmt}}"
 	_, err := q.NamedExec(stmt, {{.ModelVar}})
 
-	return apierror.NewFromSQL(err)
+	return apperror.NewFromSQL(err)
 }
 {{- end }}
 
