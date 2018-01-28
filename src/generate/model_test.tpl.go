@@ -55,12 +55,12 @@ func TestGetAny{{.OptionalName}}ByID(t *testing.T) {
 	mockDB := mocksqldb.NewMockQueryable(mockCtrl)
 	mockDB.EXPECT().GetID(&{{.ModelName}}{}, expectedID, nil)
 
-	_, err := Get{{.OptionalName}}ByID(mockDB, expectedID)
+	_, err := GetAny{{.OptionalName}}ByID(mockDB, expectedID)
 	assert.NoError(t, err, "Get{{.OptionalName}}ByID() should not have failed")
 }
 {{- end }}
 
-{{ if .Generate "Save" -}}
+{{ if and (.Generate "Save") (.UseUUID) -}}
 func Test{{.ModelName}}SaveNew(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -101,6 +101,7 @@ func Test{{.ModelName}}Create(t *testing.T) {
 	mockDB.EXPECT().InsertSuccess(&{{.ModelName}}{})
 
 	{{.ModelVar}} := &{{.ModelName}}{}
+	{{ if not (.UseUUID) }}{{.ModelVar}}.ID = uuid.NewV4().String(){{ end}}
 	err := {{.ModelVar}}.Create(mockDB)
 
 	assert.NoError(t, err, "Create() should not have fail")
@@ -109,6 +110,8 @@ func Test{{.ModelName}}Create(t *testing.T) {
 	assert.NotNil(t, {{.ModelVar}}.UpdatedAt, "UpdatedAt should have been set")
 }
 
+
+{{ if .UseUUID }}
 func Test{{.ModelName}}CreateWithID(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -122,6 +125,7 @@ func Test{{.ModelName}}CreateWithID(t *testing.T) {
 	assert.Error(t, err, "Create() should have fail")
 }
 {{- end }}
+{{- end }}
 
 {{ if .Generate "doCreate" -}}
 func Test{{.ModelName}}DoCreate(t *testing.T) {
@@ -132,6 +136,7 @@ func Test{{.ModelName}}DoCreate(t *testing.T) {
 	mockDB.EXPECT().InsertSuccess(&{{.ModelName}}{})
 
 	{{.ModelVar}} := &{{.ModelName}}{}
+	{{ if not (.UseUUID) }}{{.ModelVar}}.ID = uuid.NewV4().String(){{ end}}
 	err := {{.ModelVar}}.doCreate(mockDB)
 
 	assert.NoError(t, err, "doCreate() should not have fail")
@@ -149,6 +154,7 @@ func Test{{.ModelName}}DoCreateWithDate(t *testing.T) {
 
 	createdAt := datetime.Now().AddDate(0, 0, 1)
 	{{.ModelVar}} := &{{.ModelName}}{CreatedAt: createdAt}
+	{{ if not (.UseUUID) }}{{.ModelVar}}.ID = uuid.NewV4().String(){{ end }}
 	err := {{.ModelVar}}.doCreate(mockDB)
 
 	assert.NoError(t, err, "doCreate() should not have fail")
@@ -185,7 +191,6 @@ func Test{{.ModelName}}Update(t *testing.T) {
 	err := {{.ModelVar}}.Update(mockDB)
 
 	assert.NoError(t, err, "Update() should not have fail")
-	assert.NotEmpty(t, {{.ModelVar}}.ID, "ID should have been set")
 	assert.NotNil(t, {{.ModelVar}}.UpdatedAt, "UpdatedAt should have been set")
 }
 
@@ -283,22 +288,6 @@ func Test{{.ModelName}}DeleteError(t *testing.T) {
 	err := {{.ModelVar}}.Delete(mockDB)
 
 	assert.Error(t, err, "Delete() should have fail")
-}
-{{- end }}
-
-{{ if .Generate "GetID" -}}
-func Test{{.ModelName}}GetID(t *testing.T) {
-	{{.ModelVar}} := &{{.ModelName}}{}
-	{{.ModelVar}}.ID = uuid.NewV4().String()
-	assert.Equal(t, {{.ModelVar}}.ID, {{.ModelVar}}.GetID(), "GetID() did not return the right ID")
-}
-{{- end }}
-
-{{ if .Generate "SetID" -}}
-func Test{{.ModelName}}SetID(t *testing.T) {
-	{{.ModelVar}} := &{{.ModelName}}{}
-	{{.ModelVar}}.SetID(uuid.NewV4().String())
-	assert.NotEmpty(t, {{.ModelVar}}.ID, "SetID() did not set the ID")
 }
 {{- end }}
 

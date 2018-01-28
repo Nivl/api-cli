@@ -25,11 +25,15 @@ func SubCommands() []cli.Command {
 				},
 				cli.StringFlag{
 					Name:  "exclude, e",
-					Usage: "Methods to exclude from the generated file",
+					Usage: "Comma separated list of methods name to exclude from the generated file",
 				},
 				cli.BoolTFlag{
 					Name:  "single",
 					Usage: "Add the struct name in the global functions",
+				},
+				cli.BoolTFlag{
+					Name:  "use-uuid",
+					Usage: "Auto-populate the ID field with a UUID",
 				},
 			},
 			Action: func(c *cli.Context) error {

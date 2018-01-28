@@ -29,15 +29,35 @@ type ModelField struct {
 
 // Model represent a model to generate
 type Model struct {
-	Name        string
-	Table       string
-	FileName    string
+	// Name contains the name of the Model
+	Name string
+
+	// Table contains the name of the SQL table
+	Table string
+
+	// FileName cotains the name of the file containing the model
+	FileName string
+
+	// PackageName cotains the name of the package containing the model
 	PackageName string
-	Path        string
-	FullPath    string
-	Fields      []*ModelField
-	Excluded    []string
-	IsSingle    bool
+
+	// FullPath cotains the path to the file containing the model
+	FullPath string
+
+	// Fields cotains all the fields of the model
+	Fields []*ModelField
+
+	// Excluded contains all the method not to generate
+	Excluded []string
+
+	// IsSingle is used to name the CRUD methods accordingly to the package
+	// Example: here's the name of the finder by id depending on IsSingle
+	// false, GetUserByID
+	// true: GetByID
+	IsSingle bool
+
+	// UseUUID is used to auto-populate the ID fields
+	UseUUID bool
 }
 
 // ModelTemplateVars contains all the variable needed to render the new file
@@ -54,6 +74,7 @@ type ModelTemplateVars struct {
 	FieldsAsArray  string
 	Excluded       []string
 	IsSingle       bool
+	UseUUID        bool
 }
 
 // Generate returns true if the element has not been excluded
@@ -98,8 +119,7 @@ func (m *Model) setDefault() error {
 	if err != nil {
 		return err
 	}
-	m.Path = pwd
-	m.FullPath = path.Join(m.Path, m.FileName)
+	m.FullPath = path.Join(pwd, m.FileName)
 	return nil
 }
 
@@ -233,6 +253,13 @@ func (m *Model) generateAll() error {
 		PackageName: m.PackageName,
 		IsSingle:    m.IsSingle,
 		Excluded:    m.Excluded,
+		UseUUID:     m.UseUUID,
+	}
+
+	// if the ModelVar is `t`, we need to add an extra letter to avoid conflict
+	// with the `t` variable from `t *testing.T`
+	if vars.ModelVar == "t" {
+		vars.ModelVar += string(strings.ToLower(m.Name)[1])
 	}
 
 	if err := m.generateModelFile(vars); err != nil {
@@ -310,6 +337,7 @@ func GenModel(c *cli.Context) error {
 		PackageName: c.String("package"),
 		IsSingle:    c.BoolT("single"),
 		Excluded:    excluded,
+		UseUUID:     c.BoolT("use-uuid"),
 	}
 
 	return model.Parse()

@@ -14,7 +14,7 @@ import (
 	"github.com/Nivl/go-rest-tools/types/apierror"
 	{{ if or (.Generate "doCreate") (.Generate "doUpdate") }}"github.com/Nivl/go-types/datetime"{{ end }}
 	"github.com/Nivl/go-sqldb"
-	uuid "github.com/satori/go.uuid"
+	{{ if .UseUUID }}uuid "github.com/satori/go.uuid"{{ end }}
 )
 
 {{ if .Generate "JoinSQL" -}}
@@ -54,7 +54,7 @@ func GetAny{{.OptionalName}}ByID(q sqldb.Queryable, id string) (*{{.ModelName}},
 {{- end }}
 
 
-{{ if .Generate "Save" -}}
+{{ if and (.Generate "Save") (.UseUUID) -}}
 // Save creates or updates the article depending on the value of the id using
 // a transaction
 func ({{.ModelVar}} *{{.ModelName}}) Save(q sqldb.Queryable) error {
@@ -69,9 +69,11 @@ func ({{.ModelVar}} *{{.ModelName}}) Save(q sqldb.Queryable) error {
 {{ if .Generate "Create" -}}
 // Create persists a {{.ModelNameLC}} in the database
 func ({{.ModelVar}} *{{.ModelName}}) Create(q sqldb.Queryable) error {
+	{{ if .UseUUID }}
 	if {{.ModelVar}}.ID != "" {
 		return errors.New("cannot persist a {{.ModelNameLC}} that already has an ID")
 	}
+	{{- end }}
 
 	return {{.ModelVar}}.doCreate(q)
 }
@@ -80,7 +82,7 @@ func ({{.ModelVar}} *{{.ModelName}}) Create(q sqldb.Queryable) error {
 {{ if .Generate "doCreate" -}}
 // doCreate persists a {{.ModelNameLC}} in the database using a Node
 func ({{.ModelVar}} *{{.ModelName}}) doCreate(q sqldb.Queryable) error {
-	{{.ModelVar}}.ID = uuid.NewV4().String()
+	{{ if .UseUUID }}{{.ModelVar}}.ID = uuid.NewV4().String(){{ end }}
 	{{.ModelVar}}.UpdatedAt = datetime.Now()
 	if {{.ModelVar}}.CreatedAt == nil {
 		{{.ModelVar}}.CreatedAt = datetime.Now()
@@ -132,20 +134,6 @@ func ({{.ModelVar}} *{{.ModelName}}) Delete(q sqldb.Queryable) error {
 	_, err := q.Exec(stmt, {{.ModelVar}}.ID)
 
 	return err
-}
-{{- end }}
-
-{{ if .Generate "GetID" -}}
-// GetID returns the ID field
-func ({{.ModelVar}} *{{.ModelName}}) GetID() string {
-	return {{.ModelVar}}.ID
-}
-{{- end }}
-
-{{ if .Generate "SetID" -}}
-// SetID sets the ID field
-func ({{.ModelVar}} *{{.ModelName}}) SetID(id string) {
-	{{.ModelVar}}.ID = id
 }
 {{- end }}
 
