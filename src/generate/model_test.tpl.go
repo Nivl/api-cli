@@ -18,7 +18,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 
-	{{ if or (.Generate "doCreate") (.Generate "doUpdate") }}"github.com/Nivl/go-types/datetime"{{ end }}
+	{{ if .Generate "doCreate" }}"github.com/Nivl/go-types/datetime"{{ end }}
 )
 
 {{ if .Generate "JoinSQL" -}}

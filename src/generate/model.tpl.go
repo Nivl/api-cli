@@ -14,7 +14,7 @@ import (
 	"github.com/Nivl/go-rest-tools/types/apperror"
 	{{ if or (.Generate "doCreate") (.Generate "doUpdate") }}"github.com/Nivl/go-types/datetime"{{ end }}
 	"github.com/Nivl/go-sqldb"
-	{{ if .UseUUID }}uuid "github.com/satori/go.uuid"{{ end }}
+	{{ if and (.UseUUID) (.Generate "doCreate") }}uuid "github.com/satori/go.uuid"{{ end }}
 )
 
 {{ if .Generate "JoinSQL" -}}
