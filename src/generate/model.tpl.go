@@ -38,7 +38,10 @@ func Get{{.OptionalName}}ByID(q sqldb.Queryable, id string) (*{{.ModelName}}, er
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 and deleted_at IS NULL LIMIT 1"
 	err := q.Get({{.ModelVar}}, stmt, id)
-	return {{.ModelVar}}, apperror.NewFromSQL(err)
+	if err != nil {
+		return nil, apperror.NewFromSQL(err)
+	}
+	return {{.ModelVar}}, nil
 }
 {{- end }}
 
@@ -49,7 +52,10 @@ func GetAny{{.OptionalName}}ByID(q sqldb.Queryable, id string) (*{{.ModelName}},
 	{{.ModelVar}} := &{{.ModelName}}{}
 	stmt := "SELECT * from {{.TableName}} WHERE id=$1 LIMIT 1"
 	err := q.Get({{.ModelVar}}, stmt, id)
-	return {{.ModelVar}}, apperror.NewFromSQL(err)
+	if err != nil {
+		return nil, apperror.NewFromSQL(err)
+	}
+	return {{.ModelVar}}, nil
 }
 {{- end }}
 
@@ -133,7 +139,7 @@ func ({{.ModelVar}} *{{.ModelName}}) Delete(q sqldb.Queryable) error {
 	stmt := "DELETE FROM {{.TableName}} WHERE id=$1"
 	_, err := q.Exec(stmt, {{.ModelVar}}.ID)
 
-	return err
+	return apperror.NewFromSQL(err)
 }
 {{- end }}
 
